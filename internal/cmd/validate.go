@@ -10,6 +10,8 @@ import (
 )
 
 // NewValidateCmd returns a cobra command that validates an env set.
+// It checks that all keys in the named set are present and that their
+// values conform to any constraints defined in the config file.
 func NewValidateCmd() *cobra.Command {
 	var cfgFile string
 
@@ -26,7 +28,7 @@ func NewValidateCmd() *cobra.Command {
 			setName := args[0]
 			if err := env.Validate(cfg, setName); err != nil {
 				fmt.Fprintf(os.Stderr, "envctl: %v\n", err)
-				return err
+				return fmt.Errorf("validating env set %q: %w", setName, err)
 			}
 
 			fmt.Fprintf(cmd.OutOrStdout(), "env set %q is valid\n", setName)
