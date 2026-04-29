@@ -13,12 +13,12 @@ func baseConfig() *config.Config {
 			{
 				Name: "backend",
 				Vars: map[string]string{
-					"APP_ENV": "development",
+					"APP_ENV":   "development",
 					"LOG_LEVEL": "debug",
 				},
 				Targets: map[string]map[string]string{
 					"production": {
-						"APP_ENV": "production",
+						"APP_ENV":   "production",
 						"LOG_LEVEL": "warn",
 					},
 				},
@@ -99,5 +99,12 @@ func TestToExportLines(t *testing.T) {
 	lines := r.ToExportLines()
 	if len(lines) != 2 {
 		t.Fatalf("expected 2 lines, got %d", len(lines))
+	}
+}
+
+func TestResolve_NilConfig(t *testing.T) {
+	_, err := Resolve(nil, "backend", "")
+	if err == nil {
+		t.Fatal("expected error for nil config, got nil")
 	}
 }
