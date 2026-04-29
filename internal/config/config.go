@@ -7,54 +7,58 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// EnvSet represents a named set of environment variables.
-type EnvSet struct {
-	Name      string            `yaml:"name"`
-	Variables map[string]string `yaml:"variables"`
-}
-
-// Target represents a deployment target (e.g., staging, production).
+// Target describes a deployment target within an env set.
 type Target struct {
-	Name   string   `yaml:"name"`
-	Envs   []string `yaml:"envs"`
+	Name      string            `yaml:"name"`
+	File      string            `yaml:"file"`
+	Format    string            `yaml:"format"`
+	Overrides map[string]string `yaml:"overrides"`
 }
 
-// Config is the top-level envctl configuration structure.
+// EnvSet represents a named collection of environment variables with optional
+// per-target overrides.
+type EnvSet struct {
+	Name    string            `yaml:"name"`
+	Vars    map[string]string `yaml:"vars"`
+	Targets []Target          `yaml:"targets"`
+}
+
+// Config is the top-level configuration structure.
 type Config struct {
-	Version string    `yaml:"version"`
-	EnvSets []EnvSet  `yaml:"env_sets"`
-	Targets []Target  `yaml:"targets"`
+	EnvSets []EnvSet `yaml:"env_sets"`
 }
 
-// Load reads and parses an envctl config file from the given path.
+// Load reads and parses the YAML config file at path.
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading config file %q: %w", path, err)
+		return nil, fmt.Errorf("reading config: %w", err)
 	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parsing config file %q: %w", path, err)
+		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
 	if err := cfg.validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
+		return nil, err
 	}
 
 	return &cfg, nil
 }
 
-// Save writes the config to the given path in YAML format.
-func (c *Config) Save(path string) error {
-	data, err := yaml.Marshal(c)
-	if err != nil {
-		return fmt.Errorf("marshaling config: %w", err)
+func (c *Config) validate() error {
+	seen := make(map[string]bool)
+	for _, es := range c.EnvSets {
+		if seen[es.Name] {
+			return fmt.Errorf("duplicate env set name: %q", es.Name)
+		}
+		seen[es.Name] = true
 	}
-	return os.WriteFile(path, data, 0o644)
+	return nil
 }
 
-// EnvSetByName returns the EnvSet with the given name, or an error if not found.
+// EnvSetByName returns the EnvSet with the given name or an error.
 func (c *Config) EnvSetByName(name string) (*EnvSet, error) {
 	for i := range c.EnvSets {
 		if c.EnvSets[i].Name == name {
@@ -62,21 +66,4 @@ func (c *Config) EnvSetByName(name string) (*EnvSet, error) {
 		}
 	}
 	return nil, fmt.Errorf("env set %q not found", name)
-}
-
-func (c *Config) validate() error {
-	if c.Version == "" {
-		return fmt.Errorf("version is required")
-	}
-	seen := make(map[string]bool)
-	for _, es := range c.EnvSets {
-		if es.Name == "" {
-			return fmt.Errorf("env set name must not be empty")
-		}
-		if seen[es.Name] {
-			return fmt.Errorf("duplicate env set name %q", es.Name)
-		}
-		seen[es.Name] = true
-	}
-	return nil
 }
