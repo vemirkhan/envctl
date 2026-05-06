@@ -11,6 +11,8 @@ import (
 )
 
 // NewListCmd returns the cobra command for listing env sets.
+// The list command displays a table of all env sets defined in the config file,
+// showing each set's name, base variable count, and configured targets.
 func NewListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -28,6 +30,11 @@ func NewListCmd() *cobra.Command {
 			}
 
 			results := env.List(cfg)
+			if len(results) == 0 {
+				fmt.Fprintln(os.Stdout, "No env sets defined.")
+				return nil
+			}
+
 			env.WriteList(os.Stdout, results)
 			return nil
 		},
