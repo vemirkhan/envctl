@@ -77,3 +77,12 @@ func TestExport_UnsupportedFormat(t *testing.T) {
 		t.Errorf("unexpected error message: %v", err)
 	}
 }
+
+func TestExport_EmptyVars(t *testing.T) {
+	for _, format := range []Format{FormatExport, FormatDotenv, FormatJSON} {
+		var sb strings.Builder
+		if err := Export(&sb, map[string]string{}, format); err != nil {
+			t.Errorf("format %q: unexpected error for empty vars: %v", format, err)
+		}
+	}
+}
