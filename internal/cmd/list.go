@@ -21,7 +21,7 @@ func NewListCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfgPath, err := cmd.Flags().GetString("config")
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get config flag: %w", err)
 			}
 
 			cfg, err := config.Load(cfgPath)
