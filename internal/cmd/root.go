@@ -1,44 +1,57 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
-
-// NewRootCmd builds and returns the root cobra command for envctl.
+// NewRootCmd constructs the root cobra command with all subcommands registered.
 func NewRootCmd() *cobra.Command {
+	var cfgPath string
+
 	root := &cobra.Command{
 		Use:   "envctl",
 		Short: "Manage and sync environment variable sets across projects",
-		Long: `envctl lets you define, validate, export, diff, and sync
-environment variable sets across multiple projects and deployment
-targets from a single YAML config file.`,
+		Long: `envctl lets you define, resolve, export, and sync environment
+variable sets across multiple projects and deployment targets
+from a single YAML configuration file.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 
-	root.PersistentFlags().StringVarP(
-		&cfgFile,
-		"config", "c",
-		"envctl.yaml",
-		"path to the envctl config file",
-	)
+	root.PersistentFlags().StringVarP(&cfgPath, "config", "c", "envctl.yaml", "Path to config file")
 
-	root.AddCommand(NewExportCmd())
-	root.AddCommand(NewDiffCmd())
-	root.AddCommand(NewSyncCmd())
-	root.AddCommand(NewValidateCmd())
+	root.AddCommand(
+		NewExportCmd(),
+		NewSyncCmd(),
+		NewValidateCmd(),
+		NewDiffCmd(),
+		NewCopyCmd(),
+		NewMergeCmd(),
+		NewRenameCmd(),
+		NewListCmd(),
+		NewInspectCmd(),
+		NewSnapshotCmd(),
+		NewCompareCmd(),
+		NewTagCmd(),
+		NewAuditCmd(),
+		NewPromoteCmd(),
+		NewRollbackCmd(),
+		NewPinCmd(),
+		NewSealCmd(),
+		NewReorderCmd(),
+		NewImportCmd(),
+	)
 
 	return root
 }
 
-// Execute runs the root command and exits on error.
+// Execute runs the root command.
 func Execute() {
 	if err := NewRootCmd().Execute(); err != nil {
-		_, _ = os.Stderr.WriteString("error: " + err.Error() + "\n")
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
