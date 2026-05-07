@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"strings"
 )
 
 // DiffResult holds the comparison between two resolved env sets.
@@ -43,6 +42,11 @@ func Diff(base, target map[string]string) DiffResult {
 	return result
 }
 
+// HasChanges reports whether the DiffResult contains any differences.
+func (d DiffResult) HasChanges() bool {
+	return len(d.Added) > 0 || len(d.Removed) > 0 || len(d.Changed) > 0
+}
+
 // WriteDiff writes a human-readable diff to w.
 func WriteDiff(w io.Writer, d DiffResult) {
 	keys := func(m map[string]string) []string {
@@ -71,8 +75,7 @@ func WriteDiff(w io.Writer, d DiffResult) {
 		fmt.Fprintf(w, "~ %s: %s -> %s\n", k, pair[0], pair[1])
 	}
 
-	if len(d.Added) == 0 && len(d.Removed) == 0 && len(d.Changed) == 0 {
+	if !d.HasChanges() {
 		fmt.Fprintln(w, "(no differences)")
 	}
-	_ = strings.Contains // suppress unused import if needed
 }
