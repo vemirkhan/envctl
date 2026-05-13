@@ -21,13 +21,7 @@ func Rollback(cfg *config.Config, envSetName, snapshotName, targetName string) (
 		return nil, fmt.Errorf("env set %q not found", envSetName)
 	}
 
-	var snap *config.Snapshot
-	for i := range cfg.Snapshots {
-		if cfg.Snapshots[i].EnvSet == envSetName && cfg.Snapshots[i].Name == snapshotName {
-			snap = &cfg.Snapshots[i]
-			break
-		}
-	}
+	snap := findSnapshot(cfg, envSetName, snapshotName)
 	if snap == nil {
 		return nil, fmt.Errorf("snapshot %q not found for env set %q", snapshotName, envSetName)
 	}
@@ -63,4 +57,15 @@ func Rollback(cfg *config.Config, envSetName, snapshotName, targetName string) (
 		SnapshotName: snapshotName,
 		Restored:     restored,
 	}, nil
+}
+
+// findSnapshot returns the snapshot matching the given env set name and snapshot
+// name, or nil if no such snapshot exists.
+func findSnapshot(cfg *config.Config, envSetName, snapshotName string) *config.Snapshot {
+	for i := range cfg.Snapshots {
+		if cfg.Snapshots[i].EnvSet == envSetName && cfg.Snapshots[i].Name == snapshotName {
+			return &cfg.Snapshots[i]
+		}
+	}
+	return nil
 }
